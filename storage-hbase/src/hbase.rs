@@ -75,18 +75,21 @@ pub struct HBaseConnection {
     address: String,
     // timeout: Option<Duration>,
     namespace: Option<String>,
+    table_prefix: Option<String>,
 }
 
 impl HBaseConnection {
     pub async fn new(
         address: &str,
         namespace: Option<&str>,
+        table_prefix: Option<&str>,
     ) -> Result<Self> {
         debug!("Creating HBase connection instance");
 
         Ok(Self {
             address: address.to_string(),
             namespace: namespace.map(|ns| ns.to_string()),
+            table_prefix: table_prefix.map(|prefix| prefix.to_string()),
         })
     }
 
@@ -130,6 +133,7 @@ impl HBaseConnection {
         HBase {
             client,
             namespace: self.namespace.clone(),
+            table_prefix: self.table_prefix.clone(),
             // timeout: self.timeout,
         }
     }
@@ -172,14 +176,25 @@ pub struct HBase {
     client: HbaseSyncClient<InputProtocol, OutputProtocol>,
     // timeout: Option<Duration>,
     namespace: Option<String>,
+    table_prefix: Option<String>,
 }
 
 impl HBase {
     fn qualified_table_name(&self, table_name: &str) -> String {
-        if let Some(namespace) = &self.namespace {
-            format!("{}:{}", namespace, table_name)
+        let base_name = if let Some(prefix) = &self.table_prefix {
+            if prefix.is_empty() {
+                table_name.to_string()
+            } else {
+                format!("{}.{table_name}", prefix)
+            }
         } else {
             table_name.to_string()
+        };
+
+        if let Some(namespace) = &self.namespace {
+            format!("{}:{}", namespace, base_name)
+        } else {
+            base_name
         }
     }
 

@@ -113,6 +113,9 @@ fn main() {
         } else {
             None
         },
+        table_prefix: matches
+            .value_of("hbase_table_prefix")
+            .map(|prefix| prefix.to_string()),
         hdfs_url: if matches.is_present("use_webhdfs") {
             // Not required when using WebHDFS; leave default from storage-hbase
             solana_storage_hbase::DEFAULT_HDFS_URL.to_string()

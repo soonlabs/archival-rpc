@@ -220,6 +220,7 @@ pub struct LedgerStorageConfig {
     pub timeout: Option<std::time::Duration>,
     pub address: String,
     pub namespace: Option<String>,
+    pub table_prefix: Option<String>,
     pub hdfs_url: String,
     pub hdfs_path: String,
     // pub block_cache: Option<NonZeroUsize>,
@@ -241,6 +242,7 @@ impl Default for LedgerStorageConfig {
             timeout: None,
             address: DEFAULT_ADDRESS.to_string(),
             namespace: None,
+            table_prefix: None,
             hdfs_url: DEFAULT_HDFS_URL.to_string(),
             hdfs_path: DEFAULT_HDFS_PATH.to_string(),
             // block_cache: None,
@@ -297,6 +299,7 @@ impl LedgerStorage {
             timeout: _,
             address,
             namespace,
+            table_prefix,
             hdfs_url,
             hdfs_path,
             // block_cache,
@@ -314,6 +317,7 @@ impl LedgerStorage {
         let connection = hbase::HBaseConnection::new(
             address.as_str(),
             namespace.as_deref(),
+            table_prefix.as_deref(),
             // read_only,
             // timeout,
         )
