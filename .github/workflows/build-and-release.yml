@@ -14,7 +14,7 @@ on:
 
 jobs:
   build_and_push:
-    runs-on: soon-runtime-spot
+    runs-on: ubuntu-22.04
     permissions:
       id-token: write # This is required for requesting the JWT
       contents: read # This is required for actions/checkout
@@ -89,7 +89,7 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --build-arg ARM64_BINARY="$(pwd)/output/linux/arm64/archival-rpc" \
-            --tag ghcr.io/soonlabs/soon-archival-rpc:${{ github.event.inputs.tag_name }} \
+            --tag ghcr.io/soonlabs/archival-rpc:${{ github.event.inputs.tag_name }} \
             --push .
 
       # # Extract x86_64 binary from Docker container
