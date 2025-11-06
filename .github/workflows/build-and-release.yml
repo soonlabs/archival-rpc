@@ -88,7 +88,6 @@ jobs:
           docker buildx create --use
           docker buildx build \
             --platform linux/amd64 \
-            # --build-arg AMD64_BINARY="$(pwd)/output/linux/amd64/archival-rpc" \
             --build-arg ARM64_BINARY="$(pwd)/output/linux/arm64/archival-rpc" \
             --tag ghcr.io/soonlabs/soon-archival-rpc:${{ github.event.inputs.tag_name }} \
             --push .
