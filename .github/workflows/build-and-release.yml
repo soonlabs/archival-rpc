@@ -5,6 +5,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name for the release"
+        required: true
+        default: "v2.3.1"
+        type: string
 
 jobs:
   build_and_push:
@@ -84,24 +90,24 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --build-arg AMD64_BINARY="$(pwd)/output/linux/amd64/archival-rpc" \
             --build-arg ARM64_BINARY="$(pwd)/output/linux/arm64/archival-rpc" \
-            --tag soonlabs/archival-rpc:${GITHUB_REF_NAME} \
+            --tag ghcr.io/soonlabs/archival-rpc:${{ github.event.inputs.tag_name }} \
             --push .
 
-      # Extract x86_64 binary from Docker container
-      - name: Extract x86_64 binary
-        run: |
-          mkdir -p ${{ github.workspace }}/output
-          docker create --platform linux/amd64 --name extract-amd64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
-          docker cp extract-amd64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_amd64
-          docker rm extract-amd64
+      # # Extract x86_64 binary from Docker container
+      # - name: Extract x86_64 binary
+      #   run: |
+      #     mkdir -p ${{ github.workspace }}/output
+      #     docker create --platform linux/amd64 --name extract-amd64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
+      #     docker cp extract-amd64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_amd64
+      #     docker rm extract-amd64
 
-      # Extract arm64 binary from Docker container
-      - name: Extract arm64 binary
-        run: |
-          mkdir -p ${{ github.workspace }}/output
-          docker create --platform linux/arm64 --name extract-arm64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
-          docker cp extract-arm64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_arm64
-          docker rm extract-arm64
+      # # Extract arm64 binary from Docker container
+      # - name: Extract arm64 binary
+      #   run: |
+      #     mkdir -p ${{ github.workspace }}/output
+      #     docker create --platform linux/arm64 --name extract-arm64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
+      #     docker cp extract-arm64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_arm64
+      #     docker rm extract-arm64
 
       # # Create GitHub Release
       # - name: Create GitHub Release
