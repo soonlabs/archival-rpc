@@ -60,12 +60,12 @@ jobs:
           prefix-key: "v1-rust-cache"
           shared-key: dependencies-only
 
-      # Build arm64 binary
-      - name: Build arm64 binary
-        run: |
-          cargo build --release --target aarch64-unknown-linux-gnu
-          mkdir -p output/linux/arm64
-          cp target/aarch64-unknown-linux-gnu/release/archival-rpc output/linux/arm64/
+      # # Build arm64 binary
+      # - name: Build arm64 binary
+      #   run: |
+      #     cargo build --release --target aarch64-unknown-linux-gnu
+      #     mkdir -p output/linux/arm64
+      #     cp target/aarch64-unknown-linux-gnu/release/archival-rpc output/linux/arm64/
 
       # Build x86_64 binary
       - name: Build x86_64 binary
@@ -87,10 +87,10 @@ jobs:
         run: |
           docker buildx create --use
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --build-arg AMD64_BINARY="$(pwd)/output/linux/amd64/archival-rpc" \
+            --platform linux/amd64 \
+            # --build-arg AMD64_BINARY="$(pwd)/output/linux/amd64/archival-rpc" \
             --build-arg ARM64_BINARY="$(pwd)/output/linux/arm64/archival-rpc" \
-            --tag ghcr.io/soonlabs/archival-rpc:${{ github.event.inputs.tag_name }} \
+            --tag ghcr.io/soonlabs/soon-archival-rpc:${{ github.event.inputs.tag_name }} \
             --push .
 
       # # Extract x86_64 binary from Docker container
