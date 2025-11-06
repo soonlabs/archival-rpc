@@ -8,6 +8,10 @@ on:
 jobs:
   build_and_push:
     runs-on: ubuntu-22.04
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+      packages: write # This is required for pushing to github registry
     steps:
       # Checkout the code
       - uses: actions/checkout@v3
@@ -64,11 +68,12 @@ jobs:
           cp target/x86_64-unknown-linux-gnu/release/archival-rpc output/linux/amd64/
 
       # Log in to DockerHub
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Build and push Docker images
       - name: Build and push Docker images
@@ -78,14 +83,14 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --build-arg AMD64_BINARY="$(pwd)/output/linux/amd64/archival-rpc" \
             --build-arg ARM64_BINARY="$(pwd)/output/linux/arm64/archival-rpc" \
-            --tag dexterlaboss/archival-rpc:${GITHUB_REF_NAME} \
+            --tag soonlabs/archival-rpc:${GITHUB_REF_NAME} \
             --push .
 
       # Extract x86_64 binary from Docker container
       - name: Extract x86_64 binary
         run: |
           mkdir -p ${{ github.workspace }}/output
-          docker create --platform linux/amd64 --name extract-amd64 dexterlaboss/archival-rpc:${GITHUB_REF_NAME}
+          docker create --platform linux/amd64 --name extract-amd64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
           docker cp extract-amd64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_amd64
           docker rm extract-amd64
 
@@ -93,39 +98,39 @@ jobs:
       - name: Extract arm64 binary
         run: |
           mkdir -p ${{ github.workspace }}/output
-          docker create --platform linux/arm64 --name extract-arm64 dexterlaboss/archival-rpc:${GITHUB_REF_NAME}
+          docker create --platform linux/arm64 --name extract-arm64 soonlabs/archival-rpc:${GITHUB_REF_NAME}
           docker cp extract-arm64:/solana/archival-rpc ${{ github.workspace }}/output/archival_rpc_${{ github.ref_name }}_linux_arm64
           docker rm extract-arm64
 
-      # Create GitHub Release
-      - name: Create GitHub Release
-        id: gh-release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          body: 'Release of version ${{ github.ref }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # # Create GitHub Release
+      # - name: Create GitHub Release
+      #   id: gh-release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     name: Release ${{ github.ref }}
+      #     body: 'Release of version ${{ github.ref }}'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload x86_64 binary to GitHub Release
-      - name: Upload x86_64 binary to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.gh-release.outputs.upload_url }}
-          asset_path: ./output/linux/amd64/archival-rpc
-          asset_name: archival-rpc_${{ github.ref_name }}_linux_amd64
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # # Upload x86_64 binary to GitHub Release
+      # - name: Upload x86_64 binary to GitHub Release
+      #   uses: actions/upload-release-asset@v1
+      #   with:
+      #     upload_url: ${{ steps.gh-release.outputs.upload_url }}
+      #     asset_path: ./output/linux/amd64/archival-rpc
+      #     asset_name: archival-rpc_${{ github.ref_name }}_linux_amd64
+      #     asset_content_type: application/octet-stream
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload arm64 binary to GitHub Release
-      - name: Upload arm64 binary to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.gh-release.outputs.upload_url }}
-          asset_path: ./output/linux/arm64/archival-rpc
-          asset_name: archival-rpc_${{ github.ref_name }}_linux_arm64
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # # Upload arm64 binary to GitHub Release
+      # - name: Upload arm64 binary to GitHub Release
+      #   uses: actions/upload-release-asset@v1
+      #   with:
+      #     upload_url: ${{ steps.gh-release.outputs.upload_url }}
+      #     asset_path: ./output/linux/arm64/archival-rpc
+      #     asset_name: archival-rpc_${{ github.ref_name }}_linux_arm64
+      #     asset_content_type: application/octet-stream
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
